@@ -1291,9 +1291,15 @@
         : '<div class="empty">The board is ready for its first shoutout.</div>';
     }
 
-    function renderFreshness(feed) {
-      const generatedAt = safeText(feed?.generatedAt, '');
-      els.freshnessPill.querySelector('span:last-child').textContent = generatedAt ? `Feed updated ${formatRelative(generatedAt)}` : 'Feed not published yet';
+    function renderFreshness(...feeds) {
+      const newest = feeds
+        .map((feed) => safeText(feed?.generatedAt, ''))
+        .map((value) => ({ value, timestamp: Date.parse(value) }))
+        .filter((candidate) => Number.isFinite(candidate.timestamp))
+        .sort((left, right) => right.timestamp - left.timestamp)[0];
+      els.freshnessPill.querySelector('span:last-child').textContent = newest
+        ? `Updated ${formatRelative(newest.value)}`
+        : 'Feed not published yet';
     }
 
     async function loadFeed() {
@@ -1333,7 +1339,7 @@
       } catch (error) {
         console.warn(error);
       }
-      renderFreshness(feed);
+      renderFreshness(feed, liveFeed, scheduleFeed);
       const liveStreamers = normalizeLive(feed, liveFeed);
       renderLive(liveStreamers);
       startLiveRotation(liveStreamers);
