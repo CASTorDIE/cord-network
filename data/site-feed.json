@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-07-09T17:00:00.000Z",
+  "timezone": "America/Chicago",
+  "sources": {
+    "live": {
+      "updatedAt": null,
+      "status": "external",
+      "url": "data/live.json"
+    },
+    "schedule": {
+      "updatedAt": null,
+      "status": "external",
+      "url": "data/schedule.json"
+    },
+    "events": {
+      "updatedAt": "2026-07-09T17:00:00.000Z",
+      "status": "manual"
+    },
+    "blog": {
+      "updatedAt": "2026-07-09T17:00:00.000Z",
+      "status": "manual"
+    },
+    "supportShoutouts": {
+      "updatedAt": null,
+      "status": "manual"
+    }
+  },
+  "live": {
+    "streamers": []
+  },
+  "schedule": {
+    "entries": []
+  },
+  "events": {
+    "items": [
+      {
+        "id": "community-movie-night",
+        "date": "2026-07-11",
+        "time": "7:30 PM CT",
+        "headline": "Community Movie Night",
+        "summary": "A relaxed watch-along night for the team and regulars.",
+        "label": "Community",
+        "image": ""
+      },
+      {
+        "id": "open-lobby-friday",
+        "date": "2026-07-12",
+        "time": "8:00 PM CT",
+        "headline": "Open Lobby Friday",
+        "summary": "Members rotate through games, queues, and quick collab slots.",
+        "label": "Open Lobby",
+        "image": ""
+      },
+      {
+        "id": "creator-spotlight",
+        "date": "2026-07-14",
+        "time": "6:00 PM CT",
+        "headline": "Creator Spotlight",
+        "summary": "A short feature slot for one channel's current push.",
+        "label": "Spotlight",
+        "image": ""
+      }
+    ]
+  },
+  "blog": {
+    "items": [
+      {
+        "id": "weekly-planning",
+        "date": "2026-07-09",
+        "headline": "This Week's Team Planning Notes",
+        "summary": "Schedule reminders, live pushes, and the items members should keep visible this week.",
+        "category": "Team Update",
+        "image": ""
+      },
+      {
+        "id": "community-spotlight",
+        "date": "2026-07-08",
+        "headline": "Community Spotlight: Building Better Collab Nights",
+        "summary": "A quick look at formats that help viewers understand where to jump in.",
+        "category": "Community",
+        "image": ""
+      },
+      {
+        "id": "stream-tools",
+        "date": "2026-07-07",
+        "headline": "Streamer Tools and Resource Update",
+        "summary": "The latest shared tools, assets, and notes for members working on their next segment.",
+        "category": "Resources",
+        "image": ""
+      }
+    ]
+  },
+  "supportShoutouts": {
+    "items": []
+  }
+}

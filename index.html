@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CORD Network</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070912;
+      --panel: #101522;
+      --panel-2: #131a2a;
+      --panel-3: #0c111d;
+      --line: rgba(148, 163, 184, 0.18);
+      --line-strong: rgba(168, 85, 247, 0.34);
+      --text: #f6f3ff;
+      --muted: #b8b5ca;
+      --soft: #7e8198;
+      --purple: #8b5cf6;
+      --pink: #ff3d7f;
+      --blue: #22a7ff;
+      --cyan: #1bd4ff;
+      --amber: #ffb739;
+      --green: #64d46f;
+      --shadow: 0 20px 70px rgba(0, 0, 0, 0.36);
+      --radius: 8px;
+      --max: 1500px;
+      font-family: Inter, Aptos, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 12% 0%, rgba(139, 92, 246, 0.18), transparent 58%),
+        radial-gradient(780px 520px at 100% 12%, rgba(34, 167, 255, 0.12), transparent 56%),
+        linear-gradient(180deg, #050713 0%, var(--bg) 100%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    .shell {
+      width: min(var(--max), calc(100% - 52px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      min-height: 86px;
+      display: grid;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .nav {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 950;
+      line-height: 0.95;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #a855f7, #4f46e5 58%, #22d3ee);
+      box-shadow: 0 12px 30px rgba(139, 92, 246, 0.28);
+      font-size: 14px;
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .nav-links a {
+      position: relative;
+      padding: 12px 0;
+    }
+
+    .nav-links a:first-child::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 2px;
+      height: 2px;
+      background: var(--purple);
+      border-radius: 999px;
+    }
+
+    .feed-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 14px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.025);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .feed-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(100, 212, 111, 0.12);
+    }
+
+    main {
+      padding: 14px 0 30px;
+    }
+
+    .mission-strip {
+      padding: 6px 0 18px;
+    }
+
+    .mission-strip p {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(18px, 2.4vw, 34px);
+      font-weight: 950;
+      line-height: 1.05;
+      text-transform: uppercase;
+    }
+
+    .mission-strip span {
+      color: var(--purple);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(420px, 1.45fr) minmax(320px, 1fr) minmax(330px, 1.08fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .panel {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 44%),
+        linear-gradient(180deg, rgba(18, 23, 39, 0.96), rgba(11, 16, 28, 0.96));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel[hidden] { display: none !important; }
+
+    .panel-head {
+      min-height: 78px;
+      padding: 22px 22px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .title-wrap {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .head-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: rgba(139, 92, 246, 0.18);
+      font-size: 16px;
+    }
+
+    .head-icon.live { background: rgba(255, 61, 127, 0.14); color: var(--pink); }
+    .head-icon.schedule { background: rgba(34, 167, 255, 0.13); color: var(--blue); }
+    .head-icon.events { background: rgba(139, 92, 246, 0.16); color: var(--purple); }
+    .head-icon.blog { background: rgba(255, 61, 127, 0.13); color: #d946ef; }
+    .head-icon.support { background: rgba(255, 183, 57, 0.14); color: var(--amber); }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.05;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .panel-sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .button-lite {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      padding: 0 14px;
+      color: #e8d7ff;
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .live-body {
+      padding: 0 18px 18px;
+    }
+
+    .hero-live {
+      position: relative;
+      display: block;
+      min-height: 282px;
+      overflow: hidden;
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at 32% 18%, rgba(168, 85, 247, 0.44), transparent 150px),
+        radial-gradient(circle at 80% 22%, rgba(34, 211, 238, 0.3), transparent 140px),
+        linear-gradient(135deg, #231044, #091423 74%);
+    }
+
+    .hero-live::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.44;
+    }
+
+    .hero-live::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(4, 7, 15, 0.04) 0 42%, rgba(4, 7, 15, 0.9) 100%);
+    }
+
+    .hero-art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.64;
+      filter: saturate(1.02) contrast(1.05) brightness(0.75);
+    }
+
+    .live-badges {
+      position: absolute;
+      z-index: 2;
+      top: 16px;
+      left: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border-radius: 6px;
+      padding: 0 10px;
+      color: white;
+      background: #ff243f;
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .badge.dark {
+      background: rgba(4, 7, 15, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .hero-live-content {
+      position: absolute;
+      z-index: 2;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+    }
+
+    .streamer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .avatar,
+    .avatar-fallback {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      object-fit: cover;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(34, 167, 255, 0.52));
+      font-weight: 950;
+    }
+
+    .streamer strong,
+    .schedule-item strong,
+    .event-copy strong,
+    .post-copy strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .watch-button {
+      min-height: 38px;
+      border-radius: 7px;
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      color: white;
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mini-card {
+      min-height: 88px;
+      border: 1px solid rgba(168, 85, 247, 0.32);
+      border-radius: var(--radius);
+      padding: 10px;
+      background:
+        radial-gradient(circle at 24% 20%, rgba(139, 92, 246, 0.24), transparent 65px),
+        rgba(255, 255, 255, 0.035);
+      display: grid;
+      align-content: space-between;
+      gap: 8px;
+    }
+
+    .schedule-body,
+    .events-body,
+    .blog-body {
+      padding: 0 12px 12px;
+    }
+
+    .schedule-card {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      background: rgba(4, 7, 15, 0.3);
+      padding: 12px;
+    }
+
+    .schedule-toolbar {
+      min-height: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .schedule-list {
+      display: grid;
+      margin-top: 4px;
+    }
+
+    .schedule-item {
+      display: grid;
+      grid-template-columns: 18px 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 58px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .schedule-item:last-child { border-bottom: 0; }
+
+    .schedule-item::before {
+      content: "";
+      width: 3px;
+      height: 38px;
+      border-radius: 999px;
+      background: var(--purple);
+    }
+
+    .schedule-time {
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.25;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .schedule-time strong {
+      display: block;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .schedule-time span {
+      display: block;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 23px;
+      width: fit-content;
+      border: 1px solid rgba(168, 85, 247, 0.42);
+      border-radius: 6px;
+      padding: 0 8px;
+      color: #e9d5ff;
+      background: rgba(139, 92, 246, 0.16);
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tag.special,
+    .tag.open-lobby {
+      border-color: rgba(255, 183, 57, 0.56);
+      color: #ffe0a3;
+      background: rgba(255, 183, 57, 0.12);
+    }
+
+    .tag.workshop,
+    .tag.community {
+      border-color: rgba(27, 212, 255, 0.54);
+      color: #8beaff;
+      background: rgba(27, 212, 255, 0.11);
+    }
+
+    .event-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .event-card {
+      min-height: 86px;
+      display: grid;
+      grid-template-columns: 58px 82px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.032);
+    }
+
+    .event-date {
+      text-align: center;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .event-date b {
+      display: block;
+      color: var(--text);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .event-art,
+    .post-art {
+      min-height: 58px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(139, 92, 246, 0.42), transparent),
+        linear-gradient(315deg, rgba(34, 167, 255, 0.25), transparent),
+        #0b1020;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 950;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .event-art img,
+    .post-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .event-copy {
+      min-width: 0;
+    }
+
+    .event-copy p,
+    .post-copy p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .blog-panel {
+      grid-column: span 2;
+    }
+
+    .blog-body {
+      display: grid;
+      gap: 8px;
+    }
+
+    .post-row {
+      display: grid;
+      grid-template-columns: 156px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      min-height: 86px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 8px 0;
+    }
+
+    .post-row:last-child { border-bottom: 0; }
+    .post-copy { min-width: 0; }
+
+    .support-board {
+      display: grid;
+      gap: 8px;
+      max-height: 318px;
+      overflow-y: auto;
+      padding-right: 5px;
+      scrollbar-color: rgba(255, 183, 57, 0.58) transparent;
+      scrollbar-width: thin;
+    }
+
+    .support-board::-webkit-scrollbar { width: 7px; }
+    .support-board::-webkit-scrollbar-thumb {
+      border-radius: 999px;
+      background: rgba(255, 183, 57, 0.58);
+    }
+
+    .support-entry {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 68px;
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      color: inherit;
+      transition: background 160ms ease-out, color 160ms ease-out;
+    }
+
+    .support-entry:hover,
+    .support-entry:focus-visible {
+      background: rgba(255, 183, 57, 0.08);
+      outline: none;
+    }
+
+    .support-entry:last-child { border-bottom: 0; }
+
+    .support-mark {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #17100a;
+      background: var(--amber);
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .support-copy { min-width: 0; }
+    .support-copy strong { display: block; }
+    .support-copy p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+    .support-gifted {
+      display: block;
+      margin-top: 2px;
+      color: var(--soft);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .support-link {
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .empty {
+      min-height: 104px;
+      border: 1px dashed rgba(255, 255, 255, 0.16);
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 18px;
+    }
+
+    .footer {
+      margin-top: 12px;
+      min-height: 62px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.025);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1180px) {
+      .dashboard { grid-template-columns: 1fr 1fr; }
+      .live-panel { grid-column: span 2; }
+      .events-panel { grid-column: span 2; }
+    }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 22px, var(--max)); }
+      .nav { grid-template-columns: 1fr auto; }
+      .nav-links { display: none; }
+      .feed-pill { display: none; }
+      .dashboard,
+      .live-panel,
+      .events-panel,
+      .blog-panel,
+      .support-panel { display: block; grid-column: auto; }
+      .panel { margin-bottom: 12px; }
+      .hero-live-content,
+      .footer { flex-direction: column; align-items: flex-start; }
+      .mini-grid,
+      .event-card,
+      .post-row { grid-template-columns: 1fr; }
+      .schedule-item { grid-template-columns: 18px 1fr; }
+      .schedule-time { grid-column: 2; }
+      .tag { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="shell nav" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="CORD Network home">
+        <span class="brand-mark" aria-hidden="true">CN</span>
+        <span>CORD<br>Network</span>
+      </a>
+      <div class="nav-links">
+        <a href="#top">Home</a>
+        <a href="#live">Streamers</a>
+        <a href="#schedule">Schedule</a>
+        <a href="#events">Events</a>
+        <a href="#blog">Blog</a>
+      </div>
+      <div class="feed-pill" id="freshnessPill"><span class="feed-dot" aria-hidden="true"></span><span>Loading feed</span></div>
+    </nav>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="mission-strip" aria-label="CORD Network mission">
+      <p>Make friends. Do awesome stuff together. <span>Tell everyone!</span></p>
+    </section>
+
+    <div class="dashboard">
+      <section class="panel live-panel" id="live" aria-labelledby="liveTitle">
+        <div class="panel-head">
+          <div class="title-wrap">
+            <span class="head-icon live" aria-hidden="true">●</span>
+            <div>
+              <h2 id="liveTitle">Who’s Live Now</h2>
+              <p class="panel-sub" id="liveSummary" hidden></p>
+            </div>
+          </div>
+          <span class="button-lite" id="liveCount">0 live</span>
+        </div>
+        <div class="live-body">
+          <div id="featuredLive"></div>
+          <div class="mini-grid" id="miniLiveGrid"></div>
+        </div>
+      </section>
+
+      <section class="panel schedule-panel" id="schedule" aria-labelledby="scheduleTitle">
+        <div class="panel-head">
+          <div class="title-wrap">
+            <span class="head-icon schedule" aria-hidden="true">▣</span>
+            <div>
+              <h2 id="scheduleTitle">Schedule</h2>
+              <p class="panel-sub" id="scheduleSummary">Loading schedule</p>
+            </div>
+          </div>
+          <span class="button-lite">View Calendar</span>
+        </div>
+        <div class="schedule-body">
+          <div class="schedule-card">
+            <div class="schedule-toolbar">
+              <span id="scheduleDateLabel">Today</span>
+              <span id="scheduleCount">0 entries</span>
+            </div>
+            <div class="schedule-list" id="scheduleList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel support-panel" id="support" aria-labelledby="supportTitle">
+        <div class="panel-head">
+          <div class="title-wrap">
+            <span class="head-icon support" aria-hidden="true">&hearts;</span>
+            <div>
+              <h2 id="supportTitle">Support &amp; Shoutout Board</h2>
+            </div>
+          </div>
+          <span class="button-lite" id="supportCount">0 shoutouts</span>
+        </div>
+        <div class="support-board" id="supportBoard" aria-live="polite"></div>
+      </section>
+
+      <section class="panel blog-panel" id="blog" aria-labelledby="blogTitle">
+        <div class="panel-head">
+          <div class="title-wrap">
+            <span class="head-icon blog" aria-hidden="true">▤</span>
+            <div>
+              <h2 id="blogTitle">Blog / Updates</h2>
+              <p class="panel-sub">News, tips, and community updates</p>
+            </div>
+          </div>
+          <span class="button-lite" id="blogCount">0 posts</span>
+        </div>
+        <div class="blog-body" id="postList"></div>
+      </section>
+
+      <section class="panel events-panel" id="events" aria-labelledby="eventsTitle">
+        <div class="panel-head">
+          <div class="title-wrap">
+            <span class="head-icon events" aria-hidden="true">★</span>
+            <div>
+              <h2 id="eventsTitle">Events / Activities</h2>
+              <p class="panel-sub">Things to join!</p>
+            </div>
+          </div>
+          <span class="button-lite" id="eventsCount">0 events</span>
+        </div>
+        <div class="events-body">
+          <div class="event-list" id="eventList"></div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <strong>CORD Network</strong>
+      <span>Static first pass. Feed-driven sections. Design still open.</span>
+    </footer>
+  </main>
+
+  <script>
+    const FEED_BASE_URL = 'https://raw.githubusercontent.com/CASTorDIE/cord-network-feed/main';
+    const FEED_URL = `${FEED_BASE_URL}/site-feed.json`;
+    const LIVE_URL = `${FEED_BASE_URL}/live.json`;
+    const SCHEDULE_URL = `${FEED_BASE_URL}/schedule.json`;
+    const APP_TIME_ZONE = 'America/Chicago';
+    const VIEWER_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || APP_TIME_ZONE;
+    const SCHEDULE_DROP_AFTER_MINUTES = 120;
+    const SCHEDULE_CLOCK_INTERVAL_MS = 60000;
+    const LIVE_ROTATION_INTERVAL_MS = 20000;
+
+    const fallbackFeed = {
+      generatedAt: null,
+      timezone: APP_TIME_ZONE,
+      live: { streamers: [] },
+      schedule: { entries: [] },
+      events: { items: [] },
+      blog: { items: [] },
+      supportShoutouts: { items: [] }
+    };
+
+    const els = {
+      freshnessPill: document.getElementById('freshnessPill'),
+      livePanel: document.getElementById('live'),
+      liveSummary: document.getElementById('liveSummary'),
+      liveCount: document.getElementById('liveCount'),
+      featuredLive: document.getElementById('featuredLive'),
+      miniLiveGrid: document.getElementById('miniLiveGrid'),
+      scheduleSummary: document.getElementById('scheduleSummary'),
+      scheduleDateLabel: document.getElementById('scheduleDateLabel'),
+      scheduleCount: document.getElementById('scheduleCount'),
+      scheduleList: document.getElementById('scheduleList'),
+      eventsCount: document.getElementById('eventsCount'),
+      eventList: document.getElementById('eventList'),
+      blogCount: document.getElementById('blogCount'),
+      postList: document.getElementById('postList'),
+      supportCount: document.getElementById('supportCount'),
+      supportBoard: document.getElementById('supportBoard')
+    };
+
+    function safeText(value, fallback = '') {
+      const text = String(value ?? '').trim();
+      return text || fallback;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function externalUrl(value) {
+      try {
+        const url = new URL(String(value || '').trim());
+        return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+      } catch {
+        return '';
+      }
+    }
+
+    function parseDate(value) {
+      const dateOnly = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12);
+      const timestamp = Date.parse(value || '');
+      return Number.isFinite(timestamp) ? new Date(timestamp) : null;
+    }
+
+    function formatDate(value, options = {}) {
+      const date = parseDate(value);
+      if (!date) return '';
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: APP_TIME_ZONE,
+        ...options
+      }).format(date);
+    }
+
+    function formatRelative(value) {
+      const date = parseDate(value);
+      if (!date) return 'not published yet';
+      const diff = Date.now() - date.getTime();
+      const abs = Math.abs(diff);
+      const units = [['day', 864e5], ['hour', 36e5], ['minute', 6e4]];
+      for (const [unit, size] of units) {
+        if (abs >= size) return new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' }).format(Math.round(-diff / size), unit);
+      }
+      return 'just now';
+    }
+
+    function formatNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? new Intl.NumberFormat('en-US', { notation: number >= 1000 ? 'compact' : 'standard' }).format(number) : '0';
+    }
+
+    function formatTimeMinutes(value) {
+      const minutes = Number(value);
+      if (!Number.isFinite(minutes)) return '';
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      const suffix = hours >= 12 ? 'PM' : 'AM';
+      const hour12 = hours % 12 || 12;
+      return `${hour12}:${String(mins).padStart(2, '0')} ${suffix}`;
+    }
+
+    function getTimeZoneOffsetMs(timeZone, date) {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(date).reduce((acc, part) => {
+        if (part.type !== 'literal') acc[part.type] = part.value;
+        return acc;
+      }, {});
+      const asUtc = Date.UTC(
+        Number(parts.year),
+        Number(parts.month) - 1,
+        Number(parts.day),
+        Number(parts.hour),
+        Number(parts.minute),
+        Number(parts.second)
+      );
+      return asUtc - date.getTime();
+    }
+
+    function scheduleEntryToInstant(entry) {
+      const match = String(entry?.date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return null;
+      const minutes = Number(entry?.timeMinutes);
+      if (!Number.isFinite(minutes)) return null;
+      const wallTimeUtc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 0, minutes);
+      let instant = new Date(wallTimeUtc - getTimeZoneOffsetMs(APP_TIME_ZONE, new Date(wallTimeUtc)));
+      instant = new Date(wallTimeUtc - getTimeZoneOffsetMs(APP_TIME_ZONE, instant));
+      return Number.isFinite(instant.getTime()) ? instant : null;
+    }
+
+    function formatScheduleLocalTime(entry) {
+      const instant = scheduleEntryToInstant(entry);
+      if (!instant) return formatTimeMinutes(entry?.timeMinutes);
+      return new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: VIEWER_TIME_ZONE,
+        timeZoneName: 'short'
+      }).format(instant);
+    }
+
+    function formatScheduleLocalDate(entry, options = {}) {
+      const instant = scheduleEntryToInstant(entry);
+      if (!instant) return formatDate(entry?.date, options);
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: VIEWER_TIME_ZONE,
+        ...options
+      }).format(instant);
+    }
+
+    function datePartsToClockValue(year, month, day, minutes = 0) {
+      return Date.UTC(Number(year), Number(month) - 1, Number(day), 0, Number(minutes) || 0);
+    }
+
+    function getCentralClockValue(date = new Date()) {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: APP_TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(date).reduce((acc, part) => {
+        if (part.type !== 'literal') acc[part.type] = part.value;
+        return acc;
+      }, {});
+      const minutes = Number(parts.hour) * 60 + Number(parts.minute);
+      return datePartsToClockValue(parts.year, parts.month, parts.day, minutes);
+    }
+
+    function getScheduleStartClockValue(entry) {
+      const match = String(entry?.date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return null;
+      const minutes = Number(entry?.timeMinutes);
+      if (!Number.isFinite(minutes)) return datePartsToClockValue(match[1], match[2], match[3], 24 * 60);
+      return datePartsToClockValue(match[1], match[2], match[3], minutes);
+    }
+
+    function isScheduleEntryActive(entry, nowClock = getCentralClockValue()) {
+      const startClock = getScheduleStartClockValue(entry);
+      if (startClock === null) return false;
+      return startClock + SCHEDULE_DROP_AFTER_MINUTES * 60000 > nowClock;
+    }
+
+    function isLive(streamer) {
+      return streamer?.is_live === true
+        || String(streamer?.is_live).toLowerCase() === 'true'
+        || streamer?.type === 'live'
+        || streamer?.data?.type === 'live'
+        || streamer?.live === true;
+    }
+
+    function displayName(streamer) {
+      return safeText(streamer?.user_name || streamer?.display_name || streamer?.user?.display_name || streamer?.user_login || streamer?.login, 'Team member');
+    }
+
+    function avatarUrl(streamer) {
+      return safeText(streamer?.profile_image_url || streamer?.profile_image || streamer?.user?.profile_image_url, '');
+    }
+
+    function thumbnailUrl(streamer) {
+      return safeText(streamer?.thumbnail_url || streamer?.thumbnail || streamer?.data?.thumbnail_url, '')
+        .replace('{width}', '960')
+        .replace('{height}', '540');
+    }
+
+    function twitchLink(streamer) {
+      const direct = safeText(streamer?.twitch_url || streamer?.url, '');
+      if (direct) return direct;
+      const login = safeText(streamer?.user_login || streamer?.login || streamer?.user?.login, '');
+      return login ? `https://www.twitch.tv/${encodeURIComponent(login)}` : '#';
+    }
+
+    function avatarMarkup(streamer) {
+      const name = displayName(streamer);
+      const url = avatarUrl(streamer);
+      if (url) return `<img class="avatar" src="${escapeHtml(url)}" alt="${escapeHtml(name)} avatar">`;
+      return `<span class="avatar-fallback" aria-hidden="true">${escapeHtml(name.charAt(0).toUpperCase())}</span>`;
+    }
+
+    function normalizeLive(feed, liveFeed) {
+      const records = Array.isArray(liveFeed?.streamers)
+        ? liveFeed.streamers
+        : Array.isArray(feed?.live?.streamers)
+        ? feed.live.streamers
+        : Array.isArray(feed?.streamers)
+          ? feed.streamers
+          : [];
+      return records.map((streamer) => ({
+        ...streamer,
+        is_live: isLive(streamer),
+        user_name: displayName(streamer),
+        twitch_url: twitchLink(streamer),
+        viewer_count: Number(streamer?.viewer_count ?? streamer?.viewers ?? streamer?.data?.viewer_count ?? 0),
+        game_name: safeText(streamer?.game_name || streamer?.category_name || streamer?.game || streamer?.data?.game_name, 'Live stream'),
+        title: safeText(streamer?.title || streamer?.data?.title, 'Live now'),
+        thumbnail_url: thumbnailUrl(streamer),
+        profile_image_url: avatarUrl(streamer)
+      })).sort((a, b) => Number(b.is_live) - Number(a.is_live) || Number(b.viewer_count || 0) - Number(a.viewer_count || 0));
+    }
+
+    let currentLiveStreamers = [];
+    let liveRotationIndex = 0;
+    let liveRotationTimer = null;
+
+    function renderLive(streamers) {
+      currentLiveStreamers = Array.isArray(streamers) ? streamers : [];
+      const live = currentLiveStreamers.filter((item) => item.is_live);
+      els.livePanel.hidden = live.length === 0;
+      if (!live.length) {
+        if (liveRotationTimer) window.clearInterval(liveRotationTimer);
+        liveRotationTimer = null;
+        els.featuredLive.innerHTML = '';
+        els.miniLiveGrid.innerHTML = '';
+        return;
+      }
+
+      const featured = live[liveRotationIndex % live.length];
+      els.liveCount.textContent = live.length === 1 ? '1 live' : `${live.length} live`;
+      els.liveSummary.textContent = '';
+
+      const art = featured.thumbnail_url ? `<img class="hero-art" src="${escapeHtml(featured.thumbnail_url)}" alt="${escapeHtml(featured.user_name)} stream thumbnail">` : '';
+      els.featuredLive.innerHTML = `
+        <a class="hero-live" href="${escapeHtml(featured.twitch_url)}" target="_blank" rel="noreferrer">
+          ${art}
+          <div class="live-badges">
+            <span class="badge">${featured.is_live ? 'Live' : 'Offline'}</span>
+            <span class="badge dark">${formatNumber(featured.viewer_count)} watching</span>
+          </div>
+          <div class="hero-live-content">
+            <div class="streamer">
+              ${avatarMarkup(featured)}
+              <div>
+                <strong>${escapeHtml(featured.user_name)}</strong>
+                <div class="small">${escapeHtml(featured.game_name)}</div>
+                <div class="small" style="margin-top:8px;">${escapeHtml(featured.title)}</div>
+              </div>
+            </div>
+            <span class="watch-button">Watch Now</span>
+          </div>
+        </a>
+      `;
+
+      const minis = live.filter((item) => item !== featured).slice(0, 3);
+      els.miniLiveGrid.innerHTML = minis.length
+        ? minis.map((streamer) => `
+          <a class="mini-card" href="${escapeHtml(streamer.twitch_url)}" target="_blank" rel="noreferrer">
+            <div class="streamer">
+              ${avatarMarkup(streamer)}
+              <div>
+                <strong>${escapeHtml(streamer.user_name)}</strong>
+                <div class="small">${escapeHtml(streamer.game_name)}</div>
+              </div>
+            </div>
+            <span class="tag community">${streamer.is_live ? `${formatNumber(streamer.viewer_count)} watching` : 'Offline'}</span>
+          </a>
+        `).join('')
+        : '';
+    }
+
+    function startLiveRotation(streamers) {
+      if (liveRotationTimer) window.clearInterval(liveRotationTimer);
+      currentLiveStreamers = Array.isArray(streamers) ? streamers : [];
+      const live = currentLiveStreamers.filter((item) => item.is_live);
+      liveRotationIndex = 0;
+      if (live.length < 2) return;
+      liveRotationTimer = window.setInterval(() => {
+        const currentLive = currentLiveStreamers.filter((item) => item.is_live);
+        if (currentLive.length < 2) return;
+        liveRotationIndex = (liveRotationIndex + 1) % currentLive.length;
+        renderLive(currentLiveStreamers);
+      }, LIVE_ROTATION_INTERVAL_MS);
+    }
+
+    function normalizeSchedule(feed, scheduleFeed) {
+      const cleanEntries = Array.isArray(scheduleFeed?.entries) ? scheduleFeed.entries : [];
+      if (cleanEntries.length) return cleanEntries;
+
+      const direct = Array.isArray(feed?.schedule?.entries) ? feed.schedule.entries : [];
+      if (direct.length) return direct;
+      const days = feed?.schedule?.days && typeof feed.schedule.days === 'object' ? feed.schedule.days : {};
+      return Object.entries(days).flatMap(([date, day]) => {
+        const events = Array.isArray(day?.events) ? day.events : [];
+        return events.map((event) => ({ ...event, date }));
+      });
+    }
+
+    let currentScheduleEntries = [];
+    let scheduleClockTimer = null;
+
+    function renderSchedule(entries) {
+      currentScheduleEntries = Array.isArray(entries) ? entries : [];
+      const nowClock = getCentralClockValue();
+      const allSorted = currentScheduleEntries
+        .filter((entry) => safeText(entry?.date, ''))
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)) || Number(a.timeMinutes || 0) - Number(b.timeMinutes || 0));
+      const upcoming = allSorted.filter((entry) => isScheduleEntryActive(entry, nowClock));
+      const sorted = upcoming.slice(0, 5);
+      els.scheduleCount.textContent = `${sorted.length} entr${sorted.length === 1 ? 'y' : 'ies'}`;
+      els.scheduleDateLabel.textContent = sorted[0] ? `${formatScheduleLocalDate(sorted[0], { weekday: 'short' })}` : 'Today';
+      els.scheduleSummary.textContent = sorted[0]
+        ? `Next: ${safeText(sorted[0].streamer, 'Team member')} - local time`
+        : 'No active schedule entries right now';
+      els.scheduleList.innerHTML = sorted.length
+        ? sorted.map((entry) => {
+          const link = safeText(entry.url, safeText(entry.streamer, '') ? `https://www.twitch.tv/${encodeURIComponent(String(entry.streamer).toLowerCase())}` : '#');
+          const tag = safeText(entry.pillLabel || entry.highlight, '');
+          return `
+            <a class="schedule-item" href="${escapeHtml(link)}" target="_blank" rel="noreferrer">
+              <div>
+                <strong>${escapeHtml(safeText(entry.streamer, 'Team member'))}</strong>
+                <div class="small">${escapeHtml(safeText(entry.title, 'Untitled stream'))}</div>
+              </div>
+              <span class="schedule-time">
+                <strong>${escapeHtml(formatScheduleLocalDate(entry, { weekday: 'short' }))}</strong>
+                <span>${escapeHtml(formatScheduleLocalTime(entry))}</span>
+              </span>
+              ${tag ? `<span class="tag ${escapeHtml(String(entry.highlight || tag).toLowerCase())}">${escapeHtml(tag)}</span>` : ''}
+            </a>
+          `;
+        }).join('')
+        : '<div class="empty">Schedule entries will appear here once the feed is published.</div>';
+    }
+
+    function startScheduleClock() {
+      if (scheduleClockTimer) window.clearInterval(scheduleClockTimer);
+      scheduleClockTimer = window.setInterval(() => renderSchedule(currentScheduleEntries), SCHEDULE_CLOCK_INTERVAL_MS);
+    }
+
+    function normalizeEvents(feed) {
+      return Array.isArray(feed?.events?.items) ? feed.events.items : [];
+    }
+
+    function renderEvents(items) {
+      const events = items.filter((item) => safeText(item?.headline, '')).sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))).slice(0, 4);
+      els.eventsCount.textContent = `${events.length} event${events.length === 1 ? '' : 's'}`;
+      els.eventList.innerHTML = events.length
+        ? events.map((item) => {
+          const date = parseDate(item.date);
+          const month = date ? new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: APP_TIME_ZONE }).format(date) : 'TBA';
+          const day = date ? new Intl.DateTimeFormat('en-US', { day: 'numeric', timeZone: APP_TIME_ZONE }).format(date) : '';
+          const image = safeText(item.image, '');
+          const label = safeText(item.label, 'Event');
+          return `
+            <article class="event-card">
+              <div class="event-date"><span>${escapeHtml(month)}</span><b>${escapeHtml(day || 'TBA')}</b></div>
+              <div class="event-art">${image ? `<img src="${escapeHtml(image)}" alt="">` : escapeHtml(label)}</div>
+              <div class="event-copy">
+                <strong>${escapeHtml(item.headline)}</strong>
+                <p>${escapeHtml(safeText(item.summary, 'Details coming soon.'))}</p>
+                <div class="small" style="margin-top:6px;">${escapeHtml(safeText(item.time, 'Time TBA'))}</div>
+              </div>
+              <span class="tag ${escapeHtml(label.toLowerCase().replace(/\s+/g, '-'))}">${escapeHtml(label)}</span>
+            </article>
+          `;
+        }).join('')
+        : '<div class="empty">Curated events will appear here.</div>';
+    }
+
+    function normalizeBlog(feed) {
+      return Array.isArray(feed?.blog?.items) ? feed.blog.items : [];
+    }
+
+    function renderBlog(items) {
+      const posts = items.filter((item) => safeText(item?.headline, '')).sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 4);
+      els.blogCount.textContent = `${posts.length} post${posts.length === 1 ? '' : 's'}`;
+      els.postList.innerHTML = posts.length
+        ? posts.map((item) => {
+          const image = safeText(item.image, '');
+          const category = safeText(item.category, 'Update');
+          const art = image ? `<img src="${escapeHtml(image)}" alt="">` : category;
+          return `
+            <article class="post-row">
+              <div class="post-art">${art}</div>
+              <div class="post-copy">
+                <strong>${escapeHtml(item.headline)}</strong>
+                <p>${escapeHtml(safeText(item.summary, 'Details coming soon.'))}</p>
+                <div class="small" style="margin-top:6px;">${escapeHtml(formatDate(item.date, { year: 'numeric' }))} · ${escapeHtml(category)}</div>
+              </div>
+              <span class="tag">${escapeHtml(category)}</span>
+            </article>
+          `;
+        }).join('')
+        : '<div class="empty">Blog and update entries will appear here.</div>';
+    }
+
+    function normalizeSupportShoutouts(feed) {
+      return Array.isArray(feed?.supportShoutouts?.items) ? feed.supportShoutouts.items : [];
+    }
+
+    function renderSupportShoutouts(items) {
+      const shoutouts = items.filter((item) => safeText(item?.name, '')).slice(0, 24);
+      els.supportCount.textContent = `${shoutouts.length} shoutout${shoutouts.length === 1 ? '' : 's'}`;
+      els.supportBoard.innerHTML = shoutouts.length
+        ? shoutouts.map((item) => {
+          const name = safeText(item.name);
+          const giftedBy = safeText(item.giftedBy);
+          const message = safeText(item.message, 'Thanks for supporting the CORD Network.');
+          const url = externalUrl(item.url);
+          const giftedLine = giftedBy ? `<span class="support-gifted">gifted by ${escapeHtml(giftedBy)}</span>` : '';
+          const content = `
+            <span class="support-mark" aria-hidden="true">&hearts;</span>
+            <span class="support-copy">
+              <strong>${escapeHtml(name)}</strong>
+              ${giftedLine}
+              <p>${escapeHtml(message)}</p>
+            </span>
+            <span class="support-link">${url ? 'Visit page' : 'Shoutout'}</span>
+          `;
+          return url
+            ? `<a class="support-entry" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="Visit ${escapeHtml(name)}'s page">${content}</a>`
+            : `<article class="support-entry">${content}</article>`;
+        }).join('')
+        : '<div class="empty">The board is ready for its first shoutout.</div>';
+    }
+
+    function renderFreshness(feed) {
+      const generatedAt = safeText(feed?.generatedAt, '');
+      els.freshnessPill.querySelector('span:last-child').textContent = generatedAt ? `Feed updated ${formatRelative(generatedAt)}` : 'Feed not published yet';
+    }
+
+    async function loadFeed() {
+      const response = await fetch(FEED_URL, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Feed request failed: HTTP ${response.status}`);
+      return response.json();
+    }
+
+    async function loadLiveFeed() {
+      const response = await fetch(LIVE_URL, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Live request failed: HTTP ${response.status}`);
+      return response.json();
+    }
+
+    async function loadScheduleFeed() {
+      const response = await fetch(SCHEDULE_URL, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Schedule request failed: HTTP ${response.status}`);
+      return response.json();
+    }
+
+    async function init() {
+      let feed = fallbackFeed;
+      let liveFeed = null;
+      let scheduleFeed = null;
+      try {
+        feed = await loadFeed();
+      } catch (error) {
+        console.warn(error);
+      }
+      try {
+        liveFeed = await loadLiveFeed();
+      } catch (error) {
+        console.warn(error);
+      }
+      try {
+        scheduleFeed = await loadScheduleFeed();
+      } catch (error) {
+        console.warn(error);
+      }
+      renderFreshness(feed);
+      const liveStreamers = normalizeLive(feed, liveFeed);
+      renderLive(liveStreamers);
+      startLiveRotation(liveStreamers);
+      renderSchedule(normalizeSchedule(feed, scheduleFeed));
+      startScheduleClock();
+      renderEvents(normalizeEvents(feed));
+      renderBlog(normalizeBlog(feed));
+      renderSupportShoutouts(normalizeSupportShoutouts(feed));
+    }
+
+    void init();
+  </script>
+</body>
+</html>
