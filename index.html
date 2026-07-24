@@ -827,6 +827,7 @@
     const SCHEDULE_DROP_AFTER_MINUTES = 120;
     const SCHEDULE_CLOCK_INTERVAL_MS = 60000;
     const LIVE_ROTATION_INTERVAL_MS = 20000;
+    const FEED_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
     const fallbackFeed = {
       generatedAt: null,
@@ -1313,7 +1314,7 @@
       return response.json();
     }
 
-    async function init() {
+    async function refreshSiteData() {
       let feed = fallbackFeed;
       let liveFeed = null;
       let scheduleFeed = null;
@@ -1341,6 +1342,15 @@
       renderEvents(normalizeEvents(feed));
       renderBlog(normalizeBlog(feed));
       renderSupportShoutouts(normalizeSupportShoutouts(feed));
+    }
+
+    function startFeedRefresh() {
+      window.setInterval(() => void refreshSiteData(), FEED_REFRESH_INTERVAL_MS);
+    }
+
+    async function init() {
+      await refreshSiteData();
+      startFeedRefresh();
     }
 
     void init();

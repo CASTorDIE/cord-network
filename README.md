@@ -11,7 +11,7 @@ Clean first-pass static site for the community homepage.
 
 ## Work PC Contract
 
-The hosted site is static. The Work PC should build and publish `data/site-feed.json` after gathering local data.
+The hosted site is static. Its public JSON feed is published separately at `CASTorDIE/cord-network-feed`, so routine updates do not trigger GitHub Pages builds.
 
 For this first pass, the feed contains:
 
@@ -23,6 +23,14 @@ For this first pass, the feed contains:
 - `sources` metadata for freshness/status display
 
 Live and schedule can be generated from existing local data. Events and Blog are manually curated entries for now.
+
+Publish the current public JSON snapshot after local builders update it:
+
+```powershell
+node ..\..\scripts\publishCordNetworkFeed.js
+```
+
+`scripts\runFetchTwitchData.cmd` runs the Twitch fetch and then publishes the clean feed. The public page rechecks the feed every five minutes.
 
 Build the clean Who's Live feed from the local Twitch snapshot:
 
