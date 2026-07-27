@@ -406,7 +406,6 @@
     .schedule-toolbar {
       min-height: 36px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
       color: var(--muted);
       font-size: 12px;
@@ -422,20 +421,12 @@
     .schedule-day-break {
       display: flex;
       align-items: center;
-      gap: 10px;
+      min-height: 36px;
       margin: 12px 0 2px;
       color: var(--muted);
-      font-size: 11px;
-      font-weight: 950;
+      font-size: 12px;
+      font-weight: 850;
       text-transform: uppercase;
-    }
-
-    .schedule-day-break::before,
-    .schedule-day-break::after {
-      content: "";
-      height: 1px;
-      flex: 1;
-      background: rgba(255, 255, 255, 0.1);
     }
 
     .schedule-item {
@@ -779,7 +770,6 @@
           <div class="schedule-card">
             <div class="schedule-toolbar">
               <span id="scheduleDateLabel">Today</span>
-              <span id="scheduleCount">0 entries</span>
             </div>
             <div class="schedule-list" id="scheduleList"></div>
           </div>
@@ -867,7 +857,6 @@
       miniLiveGrid: document.getElementById('miniLiveGrid'),
       scheduleSummary: document.getElementById('scheduleSummary'),
       scheduleDateLabel: document.getElementById('scheduleDateLabel'),
-      scheduleCount: document.getElementById('scheduleCount'),
       scheduleList: document.getElementById('scheduleList'),
       eventsCount: document.getElementById('eventsCount'),
       eventList: document.getElementById('eventList'),
@@ -1192,7 +1181,6 @@
         .sort((a, b) => String(a.date).localeCompare(String(b.date)) || Number(a.timeMinutes || 0) - Number(b.timeMinutes || 0));
       const upcoming = allSorted.filter((entry) => isScheduleEntryActive(entry, nowClock));
       const sorted = upcoming.slice(0, 5);
-      els.scheduleCount.textContent = `${sorted.length} entr${sorted.length === 1 ? 'y' : 'ies'}`;
       els.scheduleDateLabel.textContent = sorted[0] ? `${formatScheduleLocalDate(sorted[0], { weekday: 'short' })}` : 'Today';
       els.scheduleSummary.textContent = sorted[0]
         ? `Next: ${safeText(sorted[0].streamer, 'Team member')} - local time`
