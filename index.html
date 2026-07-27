@@ -515,6 +515,13 @@
       background: rgba(255, 255, 255, 0.032);
     }
 
+    .event-link:hover,
+    .event-link:focus-visible {
+      border-color: rgba(139, 92, 246, 0.58);
+      background: rgba(139, 92, 246, 0.08);
+      outline: none;
+    }
+
     .event-date {
       text-align: center;
       text-transform: uppercase;
@@ -1232,8 +1239,13 @@
           const day = date ? new Intl.DateTimeFormat('en-US', { day: 'numeric', timeZone: APP_TIME_ZONE }).format(date) : '';
           const image = safeText(item.image, '');
           const label = safeText(item.label, 'Event');
+          const url = externalUrl(item.url);
+          const openingTag = url
+            ? `<a class="event-card event-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(item.headline)} details">`
+            : '<article class="event-card">';
+          const closingTag = url ? '</a>' : '</article>';
           return `
-            <article class="event-card">
+            ${openingTag}
               <div class="event-date"><span>${escapeHtml(month)}</span><b>${escapeHtml(day || 'TBA')}</b></div>
               <div class="event-art">${image ? `<img src="${escapeHtml(image)}" alt="">` : escapeHtml(label)}</div>
               <div class="event-copy">
@@ -1242,7 +1254,7 @@
                 <div class="small" style="margin-top:6px;">${escapeHtml(safeText(item.time, 'Time TBA'))}</div>
               </div>
               <span class="tag ${escapeHtml(label.toLowerCase().replace(/\s+/g, '-'))}">${escapeHtml(label)}</span>
-            </article>
+            ${closingTag}
           `;
         }).join('')
         : '<div class="empty">Curated events will appear here.</div>';
