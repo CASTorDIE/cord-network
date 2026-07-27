@@ -576,7 +576,14 @@
     }
 
     .blog-panel {
-      grid-column: span 2;
+      grid-column: auto;
+    }
+
+    .lower-panels {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
 
     .blog-body {
@@ -696,7 +703,6 @@
     @media (max-width: 1180px) {
       .dashboard { grid-template-columns: 1fr 1fr; }
       .live-panel { grid-column: span 2; }
-      .events-panel { grid-column: span 2; }
     }
 
     @media (max-width: 760px) {
@@ -705,6 +711,7 @@
       .nav-links { display: none; }
       .feed-pill { display: none; }
       .dashboard,
+      .lower-panels,
       .live-panel,
       .events-panel,
       .blog-panel,
@@ -796,6 +803,7 @@
         <div class="support-board" id="supportBoard" aria-live="polite"></div>
       </section>
 
+      <div class="lower-panels">
       <section class="panel blog-panel" id="blog" aria-labelledby="blogTitle">
         <div class="panel-head">
           <div class="title-wrap">
@@ -825,6 +833,7 @@
           <div class="event-list" id="eventList"></div>
         </div>
       </section>
+      </div>
     </div>
 
     <footer class="footer">
