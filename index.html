@@ -419,6 +419,25 @@
       margin-top: 4px;
     }
 
+    .schedule-day-break {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .schedule-day-break::before,
+    .schedule-day-break::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
     .schedule-item {
       display: grid;
       grid-template-columns: 18px 1fr auto auto;
@@ -1178,18 +1197,25 @@
       els.scheduleSummary.textContent = sorted[0]
         ? `Next: ${safeText(sorted[0].streamer, 'Team member')} - local time`
         : 'No active schedule entries right now';
+      let priorDayLabel = '';
       els.scheduleList.innerHTML = sorted.length
-        ? sorted.map((entry) => {
+        ? sorted.map((entry, index) => {
           const link = safeText(entry.url, safeText(entry.streamer, '') ? `https://www.twitch.tv/${encodeURIComponent(String(entry.streamer).toLowerCase())}` : '#');
           const tag = safeText(entry.pillLabel || entry.highlight, '');
+          const dayLabel = formatScheduleLocalDate(entry, { weekday: 'short' });
+          const dayBreak = index > 0 && dayLabel !== priorDayLabel
+            ? `<div class="schedule-day-break" aria-label="${escapeHtml(dayLabel)}"><span>${escapeHtml(dayLabel)}</span></div>`
+            : '';
+          priorDayLabel = dayLabel;
           return `
+            ${dayBreak}
             <a class="schedule-item" href="${escapeHtml(link)}" target="_blank" rel="noreferrer">
               <div>
                 <strong>${escapeHtml(safeText(entry.streamer, 'Team member'))}</strong>
                 <div class="small">${escapeHtml(safeText(entry.title, 'Untitled stream'))}</div>
               </div>
               <span class="schedule-time">
-                <strong>${escapeHtml(formatScheduleLocalDate(entry, { weekday: 'short' }))}</strong>
+                <strong>${escapeHtml(dayLabel)}</strong>
                 <span>${escapeHtml(formatScheduleLocalTime(entry))}</span>
               </span>
               ${tag ? `<span class="tag ${escapeHtml(String(entry.highlight || tag).toLowerCase())}">${escapeHtml(tag)}</span>` : ''}
