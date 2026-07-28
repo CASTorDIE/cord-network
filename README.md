@@ -5,9 +5,10 @@ Clean first-pass static site for the community homepage.
 ## Files
 
 - `index.html` renders the site.
+- `schedule.html` renders the standalone public full-week Scheduler reached from the homepage.
 - `data/site-feed.json` is the only public data file the page reads.
 - `data/live.json` is the clean public Who's Live feed.
-- `data/schedule.json` is the clean public Scheduler feed.
+- `data/schedule.json` is the clean public Scheduler feed. Schema version 2 publishes a rolling 90-day window.
 
 ## Work PC Contract
 
@@ -48,6 +49,21 @@ Build the clean Scheduler feed from the local Scheduler store:
 
 ```powershell
 node ..\..\scripts\buildLevelTogetherSchedule.js
+```
+
+The public schedule feed contains only visitor-facing occurrence fields:
+
+- date, streamer, title, start time, category label, and Twitch URL
+- publication-window and validation counts
+- source and publication freshness metadata
+
+Internal notes, archives, editor preferences, recurrence rules, recurrence IDs, and deletion history are excluded. Recurring rules are expanded into dated public occurrences, with skipped dates and dated overrides respected.
+
+If the local Scheduler store contains trailing corruption, validate recovery before repairing it:
+
+```powershell
+node ..\..\scripts\buildLevelTogetherSchedule.js
+node ..\..\scripts\buildLevelTogetherSchedule.js --repair-input
 ```
 
 ## Local Preview

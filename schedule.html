@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Browse the full CORD Network streamer schedule in your local time.">
+  <title>Full Schedule | CORD Network</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%238b5cf6'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='22' font-weight='700' fill='%23f6f3ff'%3ECN%3C/text%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070912;
+      --panel: #101522;
+      --panel-2: #131a2a;
+      --panel-3: #0c111d;
+      --line: rgba(148, 163, 184, 0.18);
+      --line-strong: rgba(168, 85, 247, 0.38);
+      --text: #f6f3ff;
+      --muted: #b8b5ca;
+      --soft: #7e8198;
+      --purple: #8b5cf6;
+      --pink: #ff3d7f;
+      --cyan: #1bd4ff;
+      --amber: #ffb739;
+      --green: #64d46f;
+      --radius: 8px;
+      --max: 1500px;
+      font-family: Inter, Aptos, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(920px 560px at 10% 0%, rgba(139, 92, 246, 0.2), transparent 58%),
+        radial-gradient(760px 520px at 100% 10%, rgba(34, 167, 255, 0.11), transparent 56%),
+        linear-gradient(180deg, #050713 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+
+    .skip-link {
+      position: fixed;
+      left: 16px;
+      top: 12px;
+      z-index: 10;
+      padding: 10px 14px;
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--purple);
+      transform: translateY(-150%);
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .shell {
+      width: min(var(--max), calc(100% - 52px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      min-height: 86px;
+      display: grid;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .nav {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 950;
+      line-height: 0.95;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #a855f7, #4f46e5 58%, #22d3ee);
+      box-shadow: 0 12px 30px rgba(139, 92, 246, 0.28);
+      font-size: 14px;
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .nav-links a {
+      position: relative;
+      padding: 12px 0;
+    }
+
+    .nav-links a.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 2px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--purple);
+    }
+
+    .feed-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 14px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.025);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .feed-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(100, 212, 111, 0.12);
+    }
+
+    main { padding: clamp(28px, 5vw, 64px) 0 48px; }
+
+    .page-head {
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(30px, 4.5vw, 62px);
+      font-weight: 950;
+      letter-spacing: -0.025em;
+      line-height: 0.95;
+      text-transform: uppercase;
+      text-wrap: balance;
+    }
+
+    .controls {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: grid;
+      grid-template-columns: auto minmax(220px, 1fr);
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: #0c111df2;
+    }
+
+    .week-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-button {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 14px;
+      color: var(--text);
+      background: var(--panel-2);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .control-button:hover { border-color: var(--line-strong); }
+    .control-button[aria-pressed="true"] {
+      border-color: var(--line-strong);
+      background: rgba(139, 92, 246, 0.22);
+    }
+
+    .control-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+
+    .control-button:focus-visible,
+    .stream-card:focus-visible,
+    .nav-links a:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+    }
+
+    .week-label {
+      min-width: 0;
+      text-align: center;
+    }
+
+    .week-label strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .week-label span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .day-column {
+      min-width: 0;
+      min-height: 330px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.012);
+      container-type: inline-size;
+    }
+
+    .day-column.today { background: rgba(139, 92, 246, 0.055); }
+
+    .day-head {
+      min-height: 76px;
+      display: grid;
+      align-content: center;
+      gap: 3px;
+      border-bottom: 1px solid var(--line);
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .today .day-head { background: rgba(139, 92, 246, 0.14); }
+
+    .day-head strong {
+      font-size: 13px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .day-head span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .day-events {
+      display: grid;
+      gap: 8px;
+      padding: 9px;
+    }
+
+    .stream-card {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 11px;
+      background: var(--panel);
+    }
+
+    .stream-card:hover {
+      border-color: var(--line-strong);
+      background: var(--panel-2);
+    }
+
+    .stream-card.highlight-blue {
+      border-color: #42a5ff;
+      background: linear-gradient(180deg, rgba(34, 167, 255, 0.13), var(--panel));
+    }
+
+    .stream-card.highlight-green {
+      border-color: #28df72;
+      background: linear-gradient(180deg, rgba(40, 223, 114, 0.12), var(--panel));
+    }
+
+    .stream-card.highlight-pink {
+      border-color: #ff5c97;
+      background: linear-gradient(180deg, rgba(255, 61, 127, 0.13), var(--panel));
+    }
+
+    .stream-card.highlight-yellow {
+      border-color: #f2c230;
+      background: linear-gradient(180deg, rgba(242, 194, 48, 0.13), var(--panel));
+    }
+
+    .stream-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .streamer {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+      font-weight: 950;
+      line-height: 1.15;
+    }
+
+    .time {
+      flex: 0 0 auto;
+      color: #dacfff;
+      font-size: 11px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .title {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      width: fit-content;
+      min-height: 22px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      padding: 0 7px;
+      color: #d7caff;
+      background: rgba(139, 92, 246, 0.1);
+      font-size: 9px;
+      font-weight: 950;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge.live {
+      border-color: rgba(255, 61, 127, 0.5);
+      color: #ff9abb;
+      background: rgba(255, 61, 127, 0.1);
+    }
+
+    .badge.soon {
+      border-color: rgba(255, 183, 57, 0.5);
+      color: #ffe0a3;
+      background: rgba(255, 183, 57, 0.1);
+    }
+
+    .badge.category::before { display: none; }
+
+    .badge.category.blue {
+      border-color: #42a5ff;
+      color: #a8d8ff;
+    }
+
+    .badge.category.green {
+      border-color: #28df72;
+      color: #aaf3c5;
+    }
+
+    .badge.category.pink {
+      border-color: #ff5c97;
+      color: #ffb2cc;
+    }
+
+    .badge.category.yellow {
+      border-color: #f2c230;
+      color: #ffe49a;
+    }
+
+    .empty-day {
+      min-height: 90px;
+      display: grid;
+      place-items: center;
+      color: var(--soft);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .page-state {
+      min-height: 300px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 30px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend strong { color: var(--text); }
+
+    .legend-note {
+      flex-basis: 100%;
+      margin-top: 2px;
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .schedule-grid {
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 22px, var(--max)); }
+      .nav { grid-template-columns: 1fr auto; }
+      .nav-links, .feed-pill { display: none; }
+      .controls {
+        position: static;
+        grid-template-columns: 1fr;
+      }
+      .week-controls { justify-content: center; }
+      .week-label { order: -1; }
+      .schedule-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .day-column {
+        min-height: 0;
+      }
+      .day-head {
+        min-height: 58px;
+        grid-template-columns: auto 1fr;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .empty-day { min-height: 64px; }
+      .footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#scheduleMain">Skip to schedule</a>
+  <header class="topbar">
+    <nav class="shell nav" aria-label="Primary navigation">
+      <a class="brand" href="index.html" aria-label="CORD Network home">
+        <span class="brand-mark" aria-hidden="true">CN</span>
+        <span>CORD<br>Network</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="index.html#live">Streamers</a>
+        <a class="active" href="schedule.html" aria-current="page">Schedule</a>
+        <a href="index.html#events">Events</a>
+        <a href="index.html#blog">Blog</a>
+      </div>
+      <div class="feed-pill" id="freshnessPill"><span class="feed-dot" aria-hidden="true"></span><span>Loading feed</span></div>
+    </nav>
+  </header>
+
+  <main class="shell" id="scheduleMain">
+    <header class="page-head">
+      <h1>CORD Streamer Schedule</h1>
+    </header>
+
+    <section aria-labelledby="weekHeading">
+      <div class="controls">
+        <div class="week-controls">
+          <button class="control-button" id="previousWeek" type="button" aria-label="Show previous week">← Previous</button>
+          <button class="control-button" id="todayWeek" type="button">Today</button>
+          <button class="control-button" id="nextWeek" type="button" aria-label="Show next week">Next →</button>
+        </div>
+        <div class="week-label">
+          <strong id="weekHeading">This week</strong>
+          <span id="weekSummary">Loading entries</span>
+        </div>
+      </div>
+
+      <div class="schedule-grid" id="scheduleGrid" aria-live="polite">
+        <div class="page-state">Loading the full schedule…</div>
+      </div>
+
+      <div class="legend">
+        <span class="badge category blue">Workshop</span>
+        <span class="badge category green">Special</span>
+        <span class="badge category pink">Birthday</span>
+        <span class="badge category yellow">Collab / Co-Stream / Next Fest / Charity</span>
+        <span class="legend-note">Times automatically update to your timezone. Start times only.</span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <strong>CORD Network</strong>
+      <span>Make friends. Do awesome stuff together. Tell everyone!</span>
+    </footer>
+  </main>
+
+  <script>
+    const FEED_BASE_URL = 'https://raw.githubusercontent.com/CASTorDIE/cord-network-feed/main';
+    const SCHEDULE_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+      ? 'data/schedule.json'
+      : `${FEED_BASE_URL}/schedule.json`;
+    const LIVE_URL = `${FEED_BASE_URL}/live.json`;
+    const SOURCE_TIME_ZONE = 'America/Chicago';
+    const VIEWER_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || SOURCE_TIME_ZONE;
+    const DROP_AFTER_MINUTES = 120;
+
+    const state = {
+      entries: [],
+      liveNames: new Set(),
+      weekStart: getDateKeyInTimeZone(new Date(), VIEWER_TIME_ZONE),
+      followingToday: true,
+      displayTimeZone: VIEWER_TIME_ZONE,
+      source: null
+    };
+
+    const els = {
+      freshnessPill: document.getElementById('freshnessPill'),
+      previousWeek: document.getElementById('previousWeek'),
+      todayWeek: document.getElementById('todayWeek'),
+      nextWeek: document.getElementById('nextWeek'),
+      weekHeading: document.getElementById('weekHeading'),
+      weekSummary: document.getElementById('weekSummary'),
+      scheduleGrid: document.getElementById('scheduleGrid')
+    };
+
+    function safeText(value, fallback = '') {
+      const text = String(value ?? '').trim();
+      return text || fallback;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function parseDateKey(value) {
+      const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return null;
+      const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+      return date.getFullYear() === Number(match[1])
+        && date.getMonth() === Number(match[2]) - 1
+        && date.getDate() === Number(match[3])
+        ? date
+        : null;
+    }
+
+    function formatDateKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function addDays(dateKey, amount) {
+      const date = parseDateKey(dateKey);
+      if (!date) return dateKey;
+      date.setDate(date.getDate() + amount);
+      return formatDateKey(date);
+    }
+
+    function enumerateWeek(startKey) {
+      return Array.from({ length: 8 }, (_, index) => addDays(startKey, index));
+    }
+
+    function getDateKeyInTimeZone(date, timeZone) {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).formatToParts(date).reduce((acc, part) => {
+        if (part.type !== 'literal') acc[part.type] = part.value;
+        return acc;
+      }, {});
+      return `${parts.year}-${parts.month}-${parts.day}`;
+    }
+
+    function getViewerToday(date = new Date()) {
+      return getDateKeyInTimeZone(date, VIEWER_TIME_ZONE);
+    }
+
+    function getTimeZoneOffsetMs(timeZone, date) {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(date).reduce((acc, part) => {
+        if (part.type !== 'literal') acc[part.type] = part.value;
+        return acc;
+      }, {});
+      return Date.UTC(
+        Number(parts.year),
+        Number(parts.month) - 1,
+        Number(parts.day),
+        Number(parts.hour),
+        Number(parts.minute),
+        Number(parts.second)
+      ) - date.getTime();
+    }
+
+    function entryInstant(entry) {
+      const match = String(entry?.date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      const minutes = Number(entry?.timeMinutes);
+      if (!match || !Number.isFinite(minutes)) return null;
+      const wallTimeUtc = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 0, minutes);
+      let instant = new Date(wallTimeUtc - getTimeZoneOffsetMs(SOURCE_TIME_ZONE, new Date(wallTimeUtc)));
+      instant = new Date(wallTimeUtc - getTimeZoneOffsetMs(SOURCE_TIME_ZONE, instant));
+      return Number.isFinite(instant.getTime()) ? instant : null;
+    }
+
+    function formatEntryTime(entry) {
+      const instant = entryInstant(entry);
+      if (!instant) return safeText(entry?.timeLabel, 'Time TBA');
+      return new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: state.displayTimeZone,
+        timeZoneName: 'short'
+      }).format(instant);
+    }
+
+    function formatDay(dateKey, options = {}) {
+      const date = parseDateKey(dateKey);
+      if (!date) return '';
+      return new Intl.DateTimeFormat('en-US', options).format(date);
+    }
+
+    function entryDisplayDate(entry) {
+      const instant = entryInstant(entry);
+      return instant ? getDateKeyInTimeZone(instant, state.displayTimeZone) : entry.date;
+    }
+
+    function relativeTime(value) {
+      const timestamp = Date.parse(value || '');
+      if (!Number.isFinite(timestamp)) return 'not published yet';
+      const diff = Date.now() - timestamp;
+      const units = [['day', 864e5], ['hour', 36e5], ['minute', 6e4]];
+      for (const [unit, size] of units) {
+        if (Math.abs(diff) >= size) {
+          return new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' }).format(Math.round(-diff / size), unit);
+        }
+      }
+      return 'just now';
+    }
+
+    function normalizeName(value) {
+      return safeText(value).toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function eventStatus(entry) {
+      if (state.liveNames.has(normalizeName(entry.streamer))) return { label: 'Live now', className: 'live' };
+      const instant = entryInstant(entry);
+      if (!instant) return null;
+      const minutes = Math.round((instant.getTime() - Date.now()) / 60000);
+      if (minutes > 0 && minutes <= 60) return { label: 'Starting soon', className: 'soon' };
+      if (minutes <= 0 && minutes > -DROP_AFTER_MINUTES) return { label: 'Scheduled now', className: '' };
+      return null;
+    }
+
+    function categoryClass(entry) {
+      return safeText(entry.highlight || entry.pillLabel)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+
+    function renderEntry(entry) {
+      const status = eventStatus(entry);
+      const category = safeText(entry.pillLabel || entry.highlight);
+      const highlightClass = entry.highlight ? ` highlight-${categoryClass({ highlight: entry.highlight })}` : '';
+      const url = safeText(entry.url, `https://www.twitch.tv/${encodeURIComponent(safeText(entry.streamer).toLowerCase())}`);
+      return `
+        <a class="stream-card${escapeHtml(highlightClass)}" href="${escapeHtml(url)}" target="_blank" rel="noreferrer"
+          aria-label="Watch ${escapeHtml(entry.streamer)} on Twitch at ${escapeHtml(formatEntryTime(entry))}">
+          <div class="stream-top">
+            <span class="streamer">${escapeHtml(entry.streamer)}</span>
+            <span class="time">${escapeHtml(formatEntryTime(entry))}</span>
+          </div>
+          <p class="title">${escapeHtml(safeText(entry.title, 'Stream details coming soon'))}</p>
+          ${status || category ? `<div class="meta">
+            ${status ? `<span class="badge ${escapeHtml(status.className)}">${escapeHtml(status.label)}</span>` : ''}
+            ${category ? `<span class="badge category ${escapeHtml(categoryClass(entry))}">${escapeHtml(category)}</span>` : ''}
+          </div>` : ''}
+        </a>
+      `;
+    }
+
+    function renderSchedule() {
+      const dates = enumerateWeek(state.weekStart);
+      const today = getViewerToday();
+      const weekEnd = dates[7];
+      const visibleEntries = state.entries.filter((entry) => entry.displayDate >= state.weekStart && entry.displayDate <= weekEnd);
+      els.weekHeading.textContent = `${formatDay(state.weekStart, { month: 'short', day: 'numeric' })} – ${formatDay(weekEnd, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      els.weekSummary.textContent = `${visibleEntries.length} scheduled stream${visibleEntries.length === 1 ? '' : 's'}`;
+      const lastAvailableDate = state.entries.at(-1)?.displayDate || '';
+      els.previousWeek.disabled = state.weekStart <= today;
+      els.nextWeek.disabled = Boolean(lastAvailableDate && weekEnd >= lastAvailableDate);
+
+      els.scheduleGrid.innerHTML = dates.map((dateKey) => {
+        const entries = visibleEntries.filter((entry) => entry.displayDate === dateKey);
+        return `
+          <section class="day-column ${dateKey === today ? 'today' : ''}" aria-labelledby="day-${dateKey}">
+            <header class="day-head">
+              <strong id="day-${dateKey}">${escapeHtml(formatDay(dateKey, { weekday: 'long' }))}</strong>
+              <span>${escapeHtml(formatDay(dateKey, { month: 'long', day: 'numeric' }))}${dateKey === today ? ' · Today' : ''}</span>
+            </header>
+            <div class="day-events">
+              ${entries.length ? entries.map(renderEntry).join('') : '<div class="empty-day">Nothing scheduled</div>'}
+            </div>
+          </section>
+        `;
+      }).join('');
+    }
+
+    function renderError() {
+      els.freshnessPill.querySelector('span:last-child').textContent = 'Schedule unavailable';
+      els.weekSummary.textContent = 'Please try again shortly';
+      els.scheduleGrid.innerHTML = '<div class="page-state">The schedule could not be loaded. Return to the homepage or try refreshing this page in a moment.</div>';
+    }
+
+    async function loadJson(url) {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Request failed: HTTP ${response.status}`);
+      return response.json();
+    }
+
+    async function init() {
+      try {
+        const [schedule, live] = await Promise.all([
+          loadJson(SCHEDULE_URL),
+          loadJson(LIVE_URL).catch(() => ({ streamers: [] }))
+        ]);
+        state.source = schedule;
+        state.entries = Array.isArray(schedule?.entries)
+          ? schedule.entries
+            .filter((entry) => parseDateKey(entry?.date) && safeText(entry?.streamer) && Number.isFinite(Number(entry?.timeMinutes)))
+            .map((entry) => ({ ...entry, displayDate: entryDisplayDate(entry) }))
+            .sort((a, b) => entryInstant(a) - entryInstant(b))
+          : [];
+        state.liveNames = new Set((live?.streamers || [])
+          .filter((streamer) => streamer?.is_live === true || String(streamer?.is_live).toLowerCase() === 'true')
+          .flatMap((streamer) => [streamer?.user_name, streamer?.display_name, streamer?.user_login, streamer?.login])
+          .map(normalizeName)
+          .filter(Boolean));
+        const sourceUpdated = safeText(schedule?.source?.updatedAt);
+        const freshnessText = sourceUpdated
+          ? `Updated ${relativeTime(sourceUpdated)}`
+          : `Published ${relativeTime(schedule?.generatedAt)}`;
+        els.freshnessPill.querySelector('span:last-child').textContent = freshnessText;
+        els.freshnessPill.title = `Times shown in ${VIEWER_TIME_ZONE}`;
+        renderSchedule();
+      } catch (error) {
+        console.warn(error);
+        renderError();
+      }
+    }
+
+    els.previousWeek.addEventListener('click', () => {
+      const today = getViewerToday();
+      const previousStart = addDays(state.weekStart, -8);
+      state.weekStart = previousStart <= today ? today : previousStart;
+      state.followingToday = state.weekStart === today;
+      renderSchedule();
+    });
+    els.nextWeek.addEventListener('click', () => {
+      state.weekStart = addDays(state.weekStart, 8);
+      state.followingToday = false;
+      renderSchedule();
+    });
+    els.todayWeek.addEventListener('click', () => {
+      state.weekStart = getViewerToday();
+      state.followingToday = true;
+      renderSchedule();
+    });
+    setInterval(() => {
+      if (!state.followingToday) return;
+      const today = getViewerToday();
+      if (today !== state.weekStart) {
+        state.weekStart = today;
+        renderSchedule();
+      }
+    }, 60000);
+    void init();
+  </script>
+</body>
+</html>
