@@ -605,19 +605,27 @@
     .post-copy { min-width: 0; }
 
     .support-board {
-      display: grid;
-      gap: 8px;
-      max-height: 318px;
-      overflow-y: auto;
-      padding-right: 5px;
-      scrollbar-color: rgba(255, 183, 57, 0.58) transparent;
-      scrollbar-width: thin;
+      height: 220px;
+      overflow: hidden;
+      position: relative;
+      mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
     }
 
-    .support-board::-webkit-scrollbar { width: 7px; }
-    .support-board::-webkit-scrollbar-thumb {
-      border-radius: 999px;
-      background: rgba(255, 183, 57, 0.58);
+    .support-track {
+      display: grid;
+      will-change: transform;
+    }
+
+    .support-track.is-scrolling {
+      animation: support-scroll-up var(--support-scroll-duration, 18s) linear infinite;
+    }
+
+    .support-board:hover .support-track,
+    .support-board:focus-within .support-track { animation-play-state: paused; }
+
+    @keyframes support-scroll-up {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(0, -50%, 0); }
     }
 
     .support-entry {
@@ -654,6 +662,16 @@
 
     .support-copy { min-width: 0; }
     .support-copy strong { display: block; }
+    .support-name {
+      color: inherit;
+      text-decoration: none;
+    }
+    .support-name:hover { color: var(--amber); }
+    .support-name:focus-visible {
+      border-radius: 4px;
+      outline: 2px solid var(--amber);
+      outline-offset: 3px;
+    }
     .support-copy p {
       margin: 3px 0 0;
       color: var(--muted);
@@ -673,6 +691,17 @@
       font-size: 12px;
       font-weight: 900;
       white-space: nowrap;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .support-board {
+        height: auto;
+        max-height: 318px;
+        overflow-y: auto;
+        mask-image: none;
+      }
+      .support-track.is-scrolling { animation: none; }
+      .support-track-copy { display: none; }
     }
 
     .empty {
@@ -1301,28 +1330,42 @@
     }
 
     function renderSupportShoutouts(items) {
-      const shoutouts = items.filter((item) => safeText(item?.name, '')).slice(0, 24);
-      els.supportCount.textContent = `${shoutouts.length} shoutout${shoutouts.length === 1 ? '' : 's'}`;
-      els.supportBoard.innerHTML = shoutouts.length
-        ? shoutouts.map((item) => {
+      const now = Date.now();
+      const shoutouts = items
+        .filter((item) => {
+          if (!safeText(item?.name, '')) return false;
+          const expiresAt = Date.parse(safeText(item?.expiresAt, ''));
+          return !Number.isFinite(expiresAt) || expiresAt > now;
+        })
+        .slice(0, 24);
+      els.supportCount.textContent = `${shoutouts.length} subscriber${shoutouts.length === 1 ? '' : 's'}`;
+
+      const renderEntries = (entries, isCopy = false) => entries.map((item) => {
           const name = safeText(item.name);
           const giftedBy = safeText(item.giftedBy);
           const message = safeText(item.message, 'Thanks for supporting the CORD Network.');
           const url = externalUrl(item.url);
           const giftedLine = giftedBy ? `<span class="support-gifted">gifted by ${escapeHtml(giftedBy)}</span>` : '';
+          const linkedName = url
+            ? `<a class="support-name" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"${isCopy ? ' tabindex="-1"' : ''}>${escapeHtml(name)}</a>`
+            : escapeHtml(name);
           const content = `
             <span class="support-mark" aria-hidden="true">&hearts;</span>
             <span class="support-copy">
-              <strong>${escapeHtml(name)}</strong>
+              <strong>${linkedName}</strong>
               ${giftedLine}
               <p>${escapeHtml(message)}</p>
             </span>
-            <span class="support-link">${url ? 'Visit page' : 'Shoutout'}</span>
+            <span class="support-link">${url ? 'Twitch' : 'Subscriber'}</span>
           `;
-          return url
-            ? `<a class="support-entry" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="Visit ${escapeHtml(name)}'s page">${content}</a>`
-            : `<article class="support-entry">${content}</article>`;
-        }).join('')
+          return `<article class="support-entry"${isCopy ? ' aria-hidden="true"' : ''}>${content}</article>`;
+        }).join('');
+
+      els.supportBoard.innerHTML = shoutouts.length
+        ? `<div class="support-track${shoutouts.length > 1 ? ' is-scrolling' : ''}" style="--support-scroll-duration:${Math.max(18, shoutouts.length * 6)}s">
+            <div>${renderEntries(shoutouts)}</div>
+            <div class="support-track-copy" aria-hidden="true">${renderEntries(shoutouts, true)}</div>
+          </div>`
         : '<div class="empty">The board is ready for its first shoutout.</div>';
     }
 
