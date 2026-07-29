@@ -1381,7 +1381,7 @@
     }
 
     async function loadFeed() {
-      const response = await fetch(FEED_URL, { cache: 'no-store' });
+      const response = await fetch(`${FEED_URL}?ts=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`Feed request failed: HTTP ${response.status}`);
       return response.json();
     }
