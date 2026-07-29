@@ -873,7 +873,7 @@
 
   <script>
     const FEED_BASE_URL = 'https://raw.githubusercontent.com/CASTorDIE/cord-network-feed/refs/heads/main';
-    const FEED_URL = `${FEED_BASE_URL}/site-feed.json`;
+    const FEED_URL = 'https://api.github.com/repos/CASTorDIE/cord-network-feed/contents/site-feed.json?ref=main';
     const LIVE_URL = `${FEED_BASE_URL}/live.json`;
     const SCHEDULE_URL = `${FEED_BASE_URL}/schedule.json`;
     const APP_TIME_ZONE = 'America/Chicago';
@@ -1381,9 +1381,16 @@
     }
 
     async function loadFeed() {
-      const response = await fetch(`${FEED_URL}?ts=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`${FEED_URL}&ts=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { Accept: 'application/vnd.github+json' }
+      });
       if (!response.ok) throw new Error(`Feed request failed: HTTP ${response.status}`);
-      return response.json();
+      const file = await response.json();
+      const encoded = safeText(file?.content, '').replace(/\s/g, '');
+      if (!encoded) throw new Error('Feed response did not include file content.');
+      const bytes = Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
     }
 
     async function loadLiveFeed() {
