@@ -605,14 +605,24 @@
     .post-copy { min-width: 0; }
 
     .support-board {
-      height: 220px;
+      flex: 1;
+      min-height: 220px;
       overflow: hidden;
       position: relative;
       mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
     }
 
+    .support-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
     .support-track {
+      position: absolute;
+      inset: 0 0 auto;
       display: grid;
+      min-height: 200%;
+      width: 100%;
       will-change: transform;
     }
 
@@ -767,7 +777,7 @@
       <div class="nav-links">
         <a href="#top">Home</a>
         <a href="#live">Streamers</a>
-        <a href="#schedule">Schedule</a>
+        <a href="schedule.html">Schedule (Full)</a>
         <a href="#events">Events</a>
         <a href="#blog">Blog</a>
       </div>
@@ -1363,8 +1373,8 @@
 
       els.supportBoard.innerHTML = shoutouts.length
         ? `<div class="support-track${shoutouts.length > 1 ? ' is-scrolling' : ''}" style="--support-scroll-duration:${Math.max(18, shoutouts.length * 6)}s">
-            <div>${renderEntries(shoutouts)}</div>
-            <div class="support-track-copy" aria-hidden="true">${renderEntries(shoutouts, true)}</div>
+            <div class="support-track-group">${renderEntries(shoutouts)}</div>
+            <div class="support-track-group support-track-copy" aria-hidden="true">${renderEntries(shoutouts, true)}</div>
           </div>`
         : '<div class="empty">The board is ready for its first shoutout.</div>';
     }
