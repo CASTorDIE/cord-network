@@ -890,6 +890,8 @@
     const VIEWER_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || APP_TIME_ZONE;
     const SCHEDULE_DROP_AFTER_MINUTES = 120;
     const SCHEDULE_CLOCK_INTERVAL_MS = 60000;
+    const EVENT_DROP_AFTER_MINUTES = 5 * 60;
+    const EVENT_CLOCK_INTERVAL_MS = 60000;
     const LIVE_ROTATION_INTERVAL_MS = 20000;
     const FEED_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -1277,8 +1279,54 @@
       return Array.isArray(feed?.events?.items) ? feed.events.items : [];
     }
 
+    function parseEventTimeMinutes(value) {
+      const numeric = Number(value);
+      if (Number.isFinite(numeric)) return numeric;
+      const match = safeText(value).match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\b/i);
+      if (!match) return null;
+      const hours = Number(match[1]);
+      const minutes = Number(match[2] || 0);
+      if (hours < 1 || hours > 12 || minutes > 59) return null;
+      return (hours % 12) * 60 + minutes + (match[3].toUpperCase() === 'PM' ? 12 * 60 : 0);
+    }
+
+    function nextCalendarDate(value) {
+      const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return '';
+      const next = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + 1));
+      return next.toISOString().slice(0, 10);
+    }
+
+    function getEventExpirationInstant(item) {
+      const explicitExpiration = Date.parse(safeText(item?.expiresAt));
+      if (Number.isFinite(explicitExpiration)) return explicitExpiration;
+
+      const timeMinutes = parseEventTimeMinutes(item?.timeMinutes ?? item?.time);
+      if (!Number.isFinite(timeMinutes)) return null;
+      const startsAt = scheduleEntryToInstant({ date: item?.date, timeMinutes });
+      const nextDay = nextCalendarDate(item?.date);
+      const nextMidnight = nextDay ? scheduleEntryToInstant({ date: nextDay, timeMinutes: 0 }) : null;
+      if (!startsAt || !nextMidnight) return null;
+      return Math.max(
+        startsAt.getTime() + EVENT_DROP_AFTER_MINUTES * 60000,
+        nextMidnight.getTime()
+      );
+    }
+
+    function isEventActive(item, now = Date.now()) {
+      const expiresAt = getEventExpirationInstant(item);
+      return expiresAt === null || expiresAt > now;
+    }
+
+    let currentEvents = [];
+    let eventClockTimer = null;
+
     function renderEvents(items) {
-      const events = items.filter((item) => safeText(item?.headline, '')).sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))).slice(0, 4);
+      currentEvents = Array.isArray(items) ? items : [];
+      const events = currentEvents
+        .filter((item) => safeText(item?.headline, '') && isEventActive(item))
+        .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))
+        .slice(0, 4);
       els.eventsCount.textContent = `${events.length} event${events.length === 1 ? '' : 's'}`;
       els.eventList.innerHTML = events.length
         ? events.map((item) => {
@@ -1306,6 +1354,11 @@
           `;
         }).join('')
         : '<div class="empty">Curated events will appear here.</div>';
+    }
+
+    function startEventClock() {
+      if (eventClockTimer) window.clearInterval(eventClockTimer);
+      eventClockTimer = window.setInterval(() => renderEvents(currentEvents), EVENT_CLOCK_INTERVAL_MS);
     }
 
     function normalizeBlog(feed) {
@@ -1441,6 +1494,7 @@
       renderSchedule(normalizeSchedule(feed, scheduleFeed));
       startScheduleClock();
       renderEvents(normalizeEvents(feed));
+      startEventClock();
       renderBlog(normalizeBlog(feed));
       renderSupportShoutouts(normalizeSupportShoutouts(feed));
     }
