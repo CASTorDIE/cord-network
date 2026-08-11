@@ -1464,13 +1464,13 @@
     }
 
     async function loadLiveFeed() {
-      const response = await fetch(LIVE_URL, { cache: 'no-store' });
+      const response = await fetch(`${LIVE_URL}?ts=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`Live request failed: HTTP ${response.status}`);
       return response.json();
     }
 
     async function loadScheduleFeed() {
-      const response = await fetch(SCHEDULE_URL, { cache: 'no-store' });
+      const response = await fetch(`${SCHEDULE_URL}?ts=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`Schedule request failed: HTTP ${response.status}`);
       return response.json();
     }

@@ -803,7 +803,7 @@
     }
 
     async function loadJson(url) {
-      const response = await fetch(url, { cache: 'no-store' });
+      const response = await fetch(`${url}?ts=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`Request failed: HTTP ${response.status}`);
       return response.json();
     }
