@@ -370,51 +370,40 @@
       white-space: nowrap;
     }
 
+    .live-marquee {
+      overflow: hidden;
+      margin-top: 10px;
+      mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+    }
+
     .mini-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .live-controls {
       display: flex;
-      align-items: center;
-      justify-content: flex-end;
+      width: max-content;
+      will-change: transform;
+    }
+
+    .mini-grid.is-scrolling {
+      animation: live-scroll-left var(--live-scroll-duration, 32s) linear infinite;
+    }
+
+    .live-marquee:hover .mini-grid,
+    .live-marquee:focus-within .mini-grid { animation-play-state: paused; }
+
+    @keyframes live-scroll-left {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-50%, 0, 0); }
+    }
+
+    .mini-track-group {
+      display: flex;
       gap: 8px;
-      margin-top: 10px;
-    }
-
-    .live-controls[hidden] { display: none; }
-
-    .live-window-status {
-      margin-right: auto;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .live-control-button {
-      min-height: 36px;
-      border: 1px solid rgba(168, 85, 247, 0.42);
-      border-radius: 999px;
-      padding: 6px 12px;
-      background: rgba(20, 15, 36, 0.78);
-      color: var(--text);
-      font: inherit;
-      font-size: 12px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .live-control-button:hover { background: rgba(139, 92, 246, 0.24); }
-
-    .live-control-button:focus-visible {
-      outline: 3px solid rgba(251, 191, 36, 0.76);
-      outline-offset: 2px;
+      padding-right: 8px;
     }
 
     .mini-card {
+      width: clamp(190px, 22vw, 250px);
+      flex: 0 0 auto;
       min-height: 88px;
       border: 1px solid rgba(168, 85, 247, 0.32);
       border-radius: var(--radius);
@@ -748,6 +737,13 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .live-marquee {
+        overflow-x: auto;
+        mask-image: none;
+        -webkit-mask-image: none;
+      }
+      .mini-grid.is-scrolling { animation: none; }
+      .mini-track-copy { display: none; }
       .support-board {
         height: auto;
         max-height: 318px;
@@ -802,9 +798,9 @@
       .panel { margin-bottom: 12px; }
       .hero-live-content,
       .footer { flex-direction: column; align-items: flex-start; }
-      .mini-grid,
       .event-card,
       .post-row { grid-template-columns: 1fr; }
+      .mini-card { width: min(76vw, 240px); }
       .schedule-item { grid-template-columns: 18px 1fr; }
       .schedule-time { grid-column: 2; }
       .tag { white-space: normal; }
@@ -848,11 +844,8 @@
         </div>
         <div class="live-body">
           <div id="featuredLive"></div>
-          <div class="mini-grid" id="miniLiveGrid"></div>
-          <div class="live-controls" id="liveControls" hidden>
-            <span class="live-window-status" id="liveWindowStatus"></span>
-            <button class="live-control-button" id="previousLive" type="button" aria-label="Show previous live creators">Previous</button>
-            <button class="live-control-button" id="nextLive" type="button" aria-label="Show next live creators">Next</button>
+          <div class="live-marquee" id="liveMarquee" tabindex="0" aria-label="Live creators scrolling right to left">
+            <div class="mini-grid" id="miniLiveGrid"></div>
           </div>
         </div>
       </section>
@@ -960,11 +953,8 @@
       liveSummary: document.getElementById('liveSummary'),
       liveCount: document.getElementById('liveCount'),
       featuredLive: document.getElementById('featuredLive'),
+      liveMarquee: document.getElementById('liveMarquee'),
       miniLiveGrid: document.getElementById('miniLiveGrid'),
-      liveControls: document.getElementById('liveControls'),
-      liveWindowStatus: document.getElementById('liveWindowStatus'),
-      previousLive: document.getElementById('previousLive'),
-      nextLive: document.getElementById('nextLive'),
       scheduleSummary: document.getElementById('scheduleSummary'),
       scheduleDateLabel: document.getElementById('scheduleDateLabel'),
       scheduleList: document.getElementById('scheduleList'),
@@ -1197,40 +1187,9 @@
     let currentLiveStreamers = [];
     let liveRotationIndex = 0;
     let liveRotationTimer = null;
-    let liveRotationPaused = false;
 
-    function liveWindowLabel(startIndex, liveCount, visibleCount) {
-      const first = startIndex + 1;
-      const last = ((startIndex + visibleCount - 1) % liveCount) + 1;
-      return last >= first
-        ? `Showing ${first}\u2013${last} of ${liveCount}`
-        : `Showing ${first}\u2013${liveCount} and 1\u2013${last} of ${liveCount}`;
-    }
-
-    function renderLive(streamers) {
-      currentLiveStreamers = Array.isArray(streamers) ? streamers : [];
-      const live = currentLiveStreamers.filter((item) => item.is_live);
-      els.livePanel.hidden = live.length === 0;
-      if (!live.length) {
-        if (liveRotationTimer) window.clearInterval(liveRotationTimer);
-        liveRotationTimer = null;
-        els.featuredLive.innerHTML = '';
-        els.miniLiveGrid.innerHTML = '';
-        els.liveControls.hidden = true;
-        return;
-      }
-
-      liveRotationIndex %= live.length;
-      const visibleCount = Math.min(4, live.length);
-      const visible = Array.from({ length: visibleCount }, (_, offset) => live[(liveRotationIndex + offset) % live.length]);
-      const featured = visible[0];
-      els.liveCount.textContent = live.length === 1 ? '1 live' : `${live.length} live`;
-      els.liveSummary.textContent = '';
-      els.liveControls.hidden = live.length <= 4;
-      els.liveWindowStatus.textContent = live.length > 4
-        ? liveWindowLabel(liveRotationIndex, live.length, visibleCount)
-        : '';
-
+    function renderFeaturedLive(live) {
+      const featured = live[liveRotationIndex % live.length];
       const art = featured.thumbnail_url ? `<img class="hero-art" src="${escapeHtml(featured.thumbnail_url)}" alt="${escapeHtml(featured.user_name)} stream thumbnail">` : '';
       els.featuredLive.innerHTML = `
         <a class="hero-live" href="${escapeHtml(featured.twitch_url)}" target="_blank" rel="noreferrer">
@@ -1252,63 +1211,69 @@
           </div>
         </a>
       `;
-
-      const minis = visible.slice(1);
-      els.miniLiveGrid.innerHTML = minis.length
-        ? minis.map((streamer) => `
-          <a class="mini-card" href="${escapeHtml(streamer.twitch_url)}" target="_blank" rel="noreferrer">
-            <div class="streamer">
-              ${avatarMarkup(streamer)}
-              <div>
-                <strong>${escapeHtml(streamer.user_name)}</strong>
-                <div class="small">${escapeHtml(streamer.game_name)}</div>
-              </div>
-            </div>
-            <span class="tag community">${streamer.is_live ? `${formatNumber(streamer.viewer_count)} watching` : 'Offline'}</span>
-          </a>
-        `).join('')
-        : '';
     }
 
-    function startLiveRotation(streamers, resetIndex = true) {
+    function renderLiveTicker(live) {
+      els.liveMarquee.hidden = live.length < 2;
+      if (live.length < 2) {
+        els.miniLiveGrid.innerHTML = '';
+        return;
+      }
+
+      const renderCards = (items, isCopy = false) => items.map((streamer) => `
+        <a class="mini-card" href="${escapeHtml(streamer.twitch_url)}" target="_blank" rel="noreferrer"${isCopy ? ' tabindex="-1"' : ''}>
+          <div class="streamer">
+            ${avatarMarkup(streamer)}
+            <div>
+              <strong>${escapeHtml(streamer.user_name)}</strong>
+              <div class="small">${escapeHtml(streamer.game_name)}</div>
+            </div>
+          </div>
+          <span class="tag community">${formatNumber(streamer.viewer_count)} watching</span>
+        </a>
+      `).join('');
+      const shouldScroll = live.length > 4;
+      els.miniLiveGrid.className = `mini-grid${shouldScroll ? ' is-scrolling' : ''}`;
+      els.miniLiveGrid.style.setProperty('--live-scroll-duration', `${Math.max(28, live.length * 5)}s`);
+      els.miniLiveGrid.innerHTML = `
+        <div class="mini-track-group">${renderCards(live)}</div>
+        ${shouldScroll ? `<div class="mini-track-group mini-track-copy" aria-hidden="true">${renderCards(live, true)}</div>` : ''}
+      `;
+    }
+
+    function renderLive(streamers) {
+      currentLiveStreamers = Array.isArray(streamers) ? streamers : [];
+      const live = currentLiveStreamers.filter((item) => item.is_live);
+      els.livePanel.hidden = live.length === 0;
+      if (!live.length) {
+        if (liveRotationTimer) window.clearInterval(liveRotationTimer);
+        liveRotationTimer = null;
+        els.featuredLive.innerHTML = '';
+        els.miniLiveGrid.innerHTML = '';
+        els.liveMarquee.hidden = true;
+        return;
+      }
+
+      liveRotationIndex %= live.length;
+      els.liveCount.textContent = live.length === 1 ? '1 live' : `${live.length} live`;
+      els.liveSummary.textContent = '';
+      renderFeaturedLive(live);
+      renderLiveTicker(live);
+    }
+
+    function startLiveRotation(streamers) {
       if (liveRotationTimer) window.clearInterval(liveRotationTimer);
       currentLiveStreamers = Array.isArray(streamers) ? streamers : [];
       const live = currentLiveStreamers.filter((item) => item.is_live);
-      if (resetIndex) liveRotationIndex = 0;
-      if (live.length <= 4 || liveRotationPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      liveRotationIndex = 0;
+      if (live.length < 2) return;
       liveRotationTimer = window.setInterval(() => {
         const currentLive = currentLiveStreamers.filter((item) => item.is_live);
-        if (currentLive.length <= 4 || liveRotationPaused || document.hidden) return;
+        if (currentLive.length < 2 || document.hidden) return;
         liveRotationIndex = (liveRotationIndex + 1) % currentLive.length;
-        renderLive(currentLiveStreamers);
+        renderFeaturedLive(currentLive);
       }, LIVE_ROTATION_INTERVAL_MS);
     }
-
-    function moveLiveWindow(direction) {
-      const live = currentLiveStreamers.filter((item) => item.is_live);
-      if (live.length <= 4) return;
-      liveRotationIndex = (liveRotationIndex + direction + live.length) % live.length;
-      renderLive(currentLiveStreamers);
-    }
-
-    function setLiveRotationPaused(paused) {
-      liveRotationPaused = paused;
-      if (paused && liveRotationTimer) {
-        window.clearInterval(liveRotationTimer);
-        liveRotationTimer = null;
-      } else if (!paused) {
-        startLiveRotation(currentLiveStreamers, false);
-      }
-    }
-
-    els.previousLive.addEventListener('click', () => moveLiveWindow(-1));
-    els.nextLive.addEventListener('click', () => moveLiveWindow(1));
-    els.livePanel.addEventListener('mouseenter', () => setLiveRotationPaused(true));
-    els.livePanel.addEventListener('mouseleave', () => setLiveRotationPaused(false));
-    els.livePanel.addEventListener('focusin', () => setLiveRotationPaused(true));
-    els.livePanel.addEventListener('focusout', (event) => {
-      if (!els.livePanel.contains(event.relatedTarget)) setLiveRotationPaused(false);
-    });
 
     function normalizeSchedule(feed, scheduleFeed) {
       const cleanEntries = Array.isArray(scheduleFeed?.entries) ? scheduleFeed.entries : [];
