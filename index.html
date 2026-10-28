@@ -855,6 +855,11 @@
       padding: 18px;
     }
 
+    .collector-panel { margin-top: 12px; padding: 22px; }
+    .collector-panel p { max-width: 85ch; margin: 12px 0 0; color: var(--muted); line-height: 1.6; }
+    .footer a { color: #e8d7ff; text-decoration: underline; text-underline-offset: 3px; }
+    .footer a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+
     .footer {
       margin-top: 12px;
       min-height: 62px;
@@ -1029,9 +1034,14 @@
       </div>
     </div>
 
+    <section class="panel collector-panel" aria-labelledby="collectorTitle">
+      <h2 id="collectorTitle">CORD Social Collector</h2>
+      <p>The CORD Social Collector organizes announcements from configured Discord channels into documents for the network. It uses limited Google Drive access to create and update those documents in the configured folder.</p>
+    </section>
+
     <footer class="footer">
       <strong>CORD Network</strong>
-      <span>Static first pass. Feed-driven sections. Design still open.</span>
+      <a href="privacy.html">Privacy Policy</a>
     </footer>
   </main>
 
